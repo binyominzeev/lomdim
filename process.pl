@@ -15,14 +15,19 @@ my $perek=92;
 my $from_pasuk=1;
 my $to_pasuk=16;
 
+my $html_outdir="html_files";
+
 # filter of sources
-my @titles=("Zohar", "Midrash Tehillim", "Yalkut Shimoni on Nach");
+my @titles=("Midrash Tehillim", "Yalkut Shimoni on Nach", "Zohar");
 
 # font size classes based on SR (SentenceRank), length of connected meforshim
 my @classes=qw/1000 4000 10000/;
 
-# this time calculated manually from Excel
-my @pasuk_class=qw/1 2 2 4 3 3 3 3 3 4 3 4 2 3 3 3/;
+# this time calculated manually from Excel (based on commentary length)
+#my @pasuk_class=qw/1 2 2 4 3 3 3 3 3 4 3 4 2 3 3 3/;
+
+# this time calculated manually from Excel (based on number of commentaries)
+my @pasuk_class=qw/1 2 2 3 3 3 3 2 3 4 3 4 2 4 3 3/;
 
 # =============== read relevant source filters ===============
 
@@ -44,7 +49,7 @@ my $obj=decode_json $json;
 
 my $text=$obj->{he};
 
-open OUT, '>:encoding(UTF-8)', "index.html";
+open OUT, '>:encoding(UTF-8)', "$html_outdir/index.html";
 print OUT $header_html;
 print OUT "<h1>Psalms $perek</h1>\n<p dir=\"rtl\">\n";
 
@@ -94,12 +99,14 @@ sub save_html_file {
 	my $i=1;
 	my $comm_length=0;
 	
-	open OUT, '>:encoding(UTF-8)', $filename;
+	open OUT, '>:encoding(UTF-8)', "$html_outdir/$filename";
 	print OUT $header_html;
 	print OUT "<h1>$maintitle</h1>\n".
 		"<p dir=\"rtl\"><span class=\"cl_1\"><a href=\"index.html\">$pasuk_text</a></span></p>\n";
 
 	# =============== filter through all connections ===============
+	
+	my @boxes;
 
 	for my $this (@$obj) {
 		my $source_ref=$this->{sourceRef};
@@ -107,6 +114,8 @@ sub save_html_file {
 		my $title=$this->{collectiveTitle}->{en};
 		my $text_en=$this->{text};
 		my $text_he=$this->{he};
+		
+		my %box=();
 
 		if (reftype $text_en) {
 			$text_en="";
@@ -117,31 +126,43 @@ sub save_html_file {
 		
 		if ($categ eq "Talmud" && exists $masechtot{$title}) {
 			$color_scheme="gemara";
+			$box{"order"}=1;
 		} elsif (exists $titles{$title}) {
 			if ($title eq "Zohar") {
 				$color_scheme="zohar";
+				$box{"order"}=3;
 			} else {
 				$color_scheme="midrash";
+				$box{"order"}=2;
 			}
 		}
 		
 		# show commentary piece
 		if ($color_scheme ne "") {
 			#print "$i\t$source_ref ($categ / $title)\n";
-			print OUT "<div class=\"commbox color_$color_scheme\">\n".
-				"<h2>$i. $source_ref ($categ / $title)</h2>\n".
+			$box{"content"}="<div class=\"commbox color_$color_scheme\">\n".
+				"<h2>$source_ref ($categ / $title)</h2>\n".
 				"<p>$text_en</p>\n".
 				"<p dir=\"rtl\" class=\"cl_3\">$text_he</p>\n".
 				"</div>\n";
 			$i++;
 			$comm_length+=length($text_he);
+
+			push @boxes, \%box;
 		}
+	}
+	
+	# show boxes ordered
+	
+	for my $box (sort { $a->{"order"} <=> $b->{"order"} } @boxes) {
+		print OUT "$box->{content}";
 	}
 	
 	print OUT "</div>\n</body>\n</html>\n";
 	close OUT;
 	
-	return $comm_length;
+	#return $comm_length;
+	return $i;
 }
 
 
