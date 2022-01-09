@@ -1,0 +1,42 @@
+body {
+
+}
+#container {
+width: 800px;
+}
+p[dir="rtl"] {
+font-family: "SBL Hebrew";
+text-align: justify;
+}
+.cl_1 {
+font-size: 75px;
+}
+.cl_2 {
+font-size: 47px;
+}
+.cl_3 {
+font-size: 33px;
+}
+.cl_4 {
+font-size: 25px;
+}
+a {
+text-decoration: none;
+color: black;
+}
+.color_gemara {
+background-color: #dbcba5;
+}
+.color_zohar {
+background-color: #beafcf;
+}
+.color_midrash {
+background-color: #b2d6bd;
+}
+.commbox {
+margin: 11px;
+padding-right: 20px;
+padding-left: 20px;
+padding-top: 1px;
+padding-bottom: 1px;
+}
